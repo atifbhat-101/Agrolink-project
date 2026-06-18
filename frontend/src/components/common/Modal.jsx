@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = 'unset';
@@ -10,10 +10,12 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
   if (!isOpen) return null;
 
+  const sizeClass = size === 'lg' ? 'max-w-2xl' : 'max-w-md';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-md transform rounded-2xl p-6 shadow-2xl transition-all border border-neutral-100 flex flex-col max-h-[90vh]">
+      <div className={`relative bg-white w-full ${sizeClass} transform rounded-2xl p-6 shadow-2xl transition-all border border-neutral-100 flex flex-col max-h-[90vh]`}>
         <div className="flex items-center justify-between border-b border-neutral-100 pb-3 mb-4">
           <h3 className="text-base font-bold text-neutral-800">{title}</h3>
           <button onClick={onClose} className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition">

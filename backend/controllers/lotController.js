@@ -57,9 +57,45 @@ export const updateLotStatus = async (req, res) => {
     if (!lot) return res.status(404).json({ message: 'Resource element mapping file not found' });
     if (lot.farmer.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Unauthorized permission profiles block exception' });
 
-    lot.status = req.body.status || lot.status;
+    const editableFields = [
+      'title',
+      'cropName',
+      'quantity',
+      'pricePerUnit',
+      'location',
+      'description',
+      'images',
+      'status',
+    ];
+
+    editableFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        lot[field] = req.body[field];
+      }
+    });
+
     const updatedLot = await lot.save();
     res.json(updatedLot);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteLot = async (req, res) => {
+  try {
+    const lot = await Lot.findById(req.params.id);
+
+    if (!lot) {
+      return res.status(404).json({ message: 'Lot not found' });
+    }
+
+    if (lot.farmer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You can only delete your own lots' });
+    }
+
+    await lot.deleteOne();
+
+    res.json({ message: 'Lot deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

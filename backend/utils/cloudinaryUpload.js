@@ -12,9 +12,6 @@ export const uploadToCloudinary = async (filePath, folderName) => {
     }
     return result.secure_url;
   } catch (error) {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
     throw new Error(`Cloudinary Service Upload Error: ${error.message}`);
   }
 };

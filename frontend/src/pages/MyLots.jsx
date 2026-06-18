@@ -4,7 +4,20 @@ import LotCard from '../components/cards/LotCard';
 import Loader from '../components/common/Loader';
 import EmptyState from '../components/common/EmptyState';
 import Modal from '../components/common/Modal';
-import { PlusCircle, ImagePlus, Save, AlertCircle } from 'lucide-react';
+import ConfirmDialog from '../components/common/ConfirmDialog';
+import {
+  PlusCircle,
+  ImagePlus,
+  Save,
+  AlertCircle,
+  Type,
+  Wheat,
+  MapPin,
+  Scale,
+  IndianRupee,
+  FileText,
+  Pencil,
+} from 'lucide-react';
 
 const MyLots = () => {
   const [lots, setLots] = useState([]);
@@ -21,7 +34,46 @@ const MyLots = () => {
 
   const [uploading, setUploading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [selectedLot, setSelectedLot] = useState(null);
+  const [editingLot, setEditingLot] = useState(null);
   const [error, setError] = useState('');
+
+  const resetLotForm = () => {
+    setTitle('');
+    setCropName('');
+    setQuantity('');
+    setPricePerUnit('');
+    setLocation('');
+    setDescription('');
+    setImages('');
+    setError('');
+  };
+
+  const openCreateModal = () => {
+    setEditingLot(null);
+    resetLotForm();
+    setModalOpen(true);
+  };
+
+  const openEditModal = (lot) => {
+    setEditingLot(lot);
+    setTitle(lot.title || '');
+    setCropName(lot.cropName || '');
+    setQuantity(String(lot.quantity || ''));
+    setPricePerUnit(String(lot.pricePerUnit || ''));
+    setLocation(lot.location || '');
+    setDescription(lot.description || '');
+    setImages(lot.images?.[0] || '');
+    setError('');
+    setModalOpen(true);
+  };
+
+  const closeLotModal = () => {
+    setModalOpen(false);
+    setEditingLot(null);
+    resetLotForm();
+  };
 
   const fetchFarmerStockLogs = async () => {
     try {
@@ -69,13 +121,13 @@ const MyLots = () => {
       setImages(data.url || '');
     } catch (err) {
       console.error(err);
-      setError('Image upload failed.');
+      setError(err?.response?.data?.message || 'Image upload failed.');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleCreateHarvestLot = async (e) => {
+  const handleSaveHarvestLot = async (e) => {
     e.preventDefault();
 
     if (
@@ -93,7 +145,7 @@ const MyLots = () => {
       setActionLoading(true);
       setError('');
 
-      await api.post('/lots', {
+      const payload = {
         title,
         cropName,
         quantity: Number(quantity),
@@ -101,28 +153,52 @@ const MyLots = () => {
         location,
         description,
         images,
-      });
+      };
 
-      setTitle('');
-      setCropName('');
-      setQuantity('');
-      setPricePerUnit('');
-      setLocation('');
-      setDescription('');
-      setImages('');
+      if (editingLot) {
+        const { data } = await api.put(`/lots/${editingLot._id}`, payload);
 
-      setModalOpen(false);
+        setLots((currentLots) =>
+          currentLots.map((lot) =>
+            lot._id === data._id ? data : lot
+          )
+        );
+      } else {
+        await api.post('/lots', payload);
+        await fetchFarmerStockLogs();
+      }
 
-      await fetchFarmerStockLogs();
+      closeLotModal();
     } catch (err) {
       console.error(err);
 
       setError(
         err?.response?.data?.message ||
-          'Failed to create listing.'
+          `Failed to ${editingLot ? 'update' : 'create'} listing.`
       );
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleDeleteHarvestLot = async () => {
+    if (!selectedLot) return;
+
+    try {
+      setDeleteLoading(true);
+      setError('');
+
+      await api.delete(`/lots/${selectedLot._id}`);
+
+      setLots((currentLots) =>
+        currentLots.filter((lot) => lot._id !== selectedLot._id)
+      );
+      setSelectedLot(null);
+    } catch (err) {
+      console.error(err);
+      setError(err?.response?.data?.message || 'Failed to delete lot.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -147,7 +223,7 @@ const MyLots = () => {
         </div>
 
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={openCreateModal}
           className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-white"
         >
           <PlusCircle className="h-4 w-4" />
@@ -163,113 +239,180 @@ const MyLots = () => {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {lots.map((lot) => (
-            <LotCard key={lot._id} lot={lot} />
+            <LotCard
+              key={lot._id}
+              lot={lot}
+              onEdit={openEditModal}
+              onDelete={setSelectedLot}
+              deleting={deleteLoading && selectedLot?._id === lot._id}
+            />
           ))}
         </div>
       )}
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Create New Lot"
+        onClose={closeLotModal}
+        title={editingLot ? 'Edit Lot' : 'Create New Lot'}
+        size="lg"
       >
         <form
-          onSubmit={handleCreateHarvestLot}
-          className="space-y-4"
+          onSubmit={handleSaveHarvestLot}
+          className="space-y-5"
         >
           {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-red-700">
-              <AlertCircle className="h-4 w-4" />
-              <p>{error}</p>
+            <div className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 p-3 text-red-700">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <p className="text-xs font-semibold">{error}</p>
             </div>
           )}
 
-          <div className="relative border-2 border-dashed rounded-xl p-4">
-            {images ? (
-              <img
-                src={images}
-                alt="Lot"
-                className="h-32 w-full object-cover rounded-xl"
-              />
-            ) : (
-              <div className="text-center">
-                <ImagePlus className="mx-auto h-6 w-6" />
-                <p>Select Image</p>
-              </div>
-            )}
+          <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
+            <div className="space-y-3">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
+                {images ? (
+                  <img
+                    src={images}
+                    alt="Lot"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-neutral-500">
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+                      <ImagePlus className="h-6 w-6" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-black text-neutral-700">Crop Image</p>
+                      <p className="text-xs font-medium text-neutral-400">JPG, PNG, WEBP</p>
+                    </div>
+                  </div>
+                )}
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleGalleryMediaUpload}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleGalleryMediaUpload}
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                />
 
-            {uploading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-                <Loader size="sm" />
+                {uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/75">
+                    <Loader size="sm" />
+                  </div>
+                )}
               </div>
-            )}
+
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
+                <div className="flex items-center gap-2 text-emerald-800">
+                  {editingLot ? (
+                    <Pencil className="h-4 w-4" />
+                  ) : (
+                    <PlusCircle className="h-4 w-4" />
+                  )}
+                  <span className="text-xs font-black uppercase tracking-wider">
+                    {editingLot ? 'Editing Lot' : 'New Lot'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5 sm:col-span-2">
+                <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-500">
+                  <Type className="h-3.5 w-3.5" />
+                  Title
+                </span>
+                <input
+                  type="text"
+                  placeholder="Fresh organic tomatoes"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  required
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-500">
+                  <Wheat className="h-3.5 w-3.5" />
+                  Crop
+                </span>
+                <input
+                  type="text"
+                  placeholder="Tomato"
+                  value={cropName}
+                  onChange={(e) => setCropName(e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  required
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-500">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Location
+                </span>
+                <input
+                  type="text"
+                  placeholder="Pune"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  required
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-500">
+                  <Scale className="h-3.5 w-3.5" />
+                  Quantity
+                </span>
+                <input
+                  type="number"
+                  placeholder="25"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  required
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-500">
+                  <IndianRupee className="h-3.5 w-3.5" />
+                  Price / Qtl
+                </span>
+                <input
+                  type="number"
+                  placeholder="1800"
+                  value={pricePerUnit}
+                  onChange={(e) => setPricePerUnit(e.target.value)}
+                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  required
+                />
+              </label>
+
+              <label className="space-y-1.5 sm:col-span-2">
+                <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-500">
+                  <FileText className="h-3.5 w-3.5" />
+                  Description
+                </span>
+                <textarea
+                  rows={4}
+                  placeholder="Add crop quality, harvest date, packaging, or delivery notes"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full resize-none rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                />
+              </label>
+            </div>
           </div>
 
-          <input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full border rounded-xl p-2"
-            required
-          />
-
-          <input
-            type="text"
-            placeholder="Crop Name"
-            value={cropName}
-            onChange={(e) => setCropName(e.target.value)}
-            className="w-full border rounded-xl p-2"
-            required
-          />
-
-          <input
-            type="text"
-            placeholder="Location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full border rounded-xl p-2"
-            required
-          />
-
-          <input
-            type="number"
-            placeholder="Quantity"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            className="w-full border rounded-xl p-2"
-            required
-          />
-
-          <input
-            type="number"
-            placeholder="Price Per Unit"
-            value={pricePerUnit}
-            onChange={(e) => setPricePerUnit(e.target.value)}
-            className="w-full border rounded-xl p-2"
-            required
-          />
-
-          <textarea
-            rows={3}
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full border rounded-xl p-2"
-          />
-
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 border-t border-neutral-100 pt-4 sm:flex-row sm:justify-end">
             <button
               type="button"
-              onClick={() => setModalOpen(false)}
-              className="border rounded-xl px-4 py-2"
+              onClick={closeLotModal}
+              className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-bold text-neutral-600 transition hover:bg-neutral-50"
             >
               Cancel
             </button>
@@ -277,14 +420,23 @@ const MyLots = () => {
             <button
               type="submit"
               disabled={actionLoading || uploading}
-              className="bg-emerald-600 text-white rounded-xl px-4 py-2 flex items-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              {actionLoading ? 'Saving...' : 'Publish'}
+              {actionLoading ? 'Saving...' : editingLot ? 'Update' : 'Publish'}
             </button>
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={Boolean(selectedLot)}
+        onClose={() => setSelectedLot(null)}
+        onConfirm={handleDeleteHarvestLot}
+        title="Delete Lot"
+        message={`Delete "${selectedLot?.title || 'this lot'}"? This cannot be undone.`}
+        loading={deleteLoading}
+      />
     </div>
   );
 };
