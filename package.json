@@ -1,0 +1,16 @@
+{
+  "name": "agrolink-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm run install-frontend && npm run install-backend",
+    "install-frontend": "cd frontend && npm install",
+    "install-backend": "cd backend && npm install",
+    "dev": "concurrently \"npm run server --prefix backend\" \"npm run dev --prefix frontend\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
