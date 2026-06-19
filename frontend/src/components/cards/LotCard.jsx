@@ -37,11 +37,11 @@ const LotCard = ({ lot, showActions = true, onEdit, onDelete, deleting = false }
         <div className="mt-4 grid grid-cols-2 gap-2 border-t border-b border-neutral-50 py-3 text-neutral-600">
           <div className="flex items-center gap-1.5">
             <Scale className="h-3.5 w-3.5 text-neutral-400" />
-            <span className="text-xs font-semibold">{lot.quantity} Quintals</span>
+            <span className="text-xs font-semibold">{lot.quantity} Kgs</span>
           </div>
           <div className="flex items-center gap-1.5 justify-end">
             <IndianRupee className="h-3.5 w-3.5 text-emerald-600" />
-            <span className="text-xs font-black text-neutral-800">₹{lot.pricePerUnit}/Qtl</span>
+            <span className="text-xs font-black text-neutral-800">₹{lot.pricePerUnit}/Kg</span>
           </div>
         </div>
 

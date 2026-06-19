@@ -164,7 +164,7 @@ const LotDetails = () => {
             value={biddingPrice}
             onChange={(e) => setBiddingPrice(e.target.value)}
             className="w-full border p-2 rounded"
-            placeholder="Price per Qtl"
+            placeholder="Price per Kg"
           />
 
           <input

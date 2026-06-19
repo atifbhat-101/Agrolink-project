@@ -33,14 +33,14 @@ const RequestCard = ({ request, role, onStatusUpdate, loading = false }) => {
           <Scale className="h-4 w-4 text-neutral-400" />
           <div>
             <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wide">Volume Offer</p>
-            <p className="text-xs font-bold text-neutral-800">{request.quantityRequested} Qtls</p>
+            <p className="text-xs font-bold text-neutral-800">{request.quantityRequested} Kgs</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <IndianRupee className="h-4 w-4 text-emerald-600" />
           <div>
             <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wide">Bidded Value</p>
-            <p className="text-xs font-black text-emerald-700">₹{request.offeredPrice}/Qtl</p>
+            <p className="text-xs font-black text-emerald-700">₹{request.offeredPrice}/Kg</p>
           </div>
         </div>
       </div>

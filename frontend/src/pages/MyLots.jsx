@@ -324,7 +324,7 @@ const MyLots = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="Fresh organic tomatoes"
+                  placeholder="Fresh Kashmiri Apples"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
@@ -339,7 +339,7 @@ const MyLots = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="Tomato"
+                  placeholder="Apple"
                   value={cropName}
                   onChange={(e) => setCropName(e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
@@ -354,7 +354,7 @@ const MyLots = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="Pune"
+                  placeholder="Shopian, Jammu & Kashmir"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
@@ -369,7 +369,7 @@ const MyLots = () => {
                 </span>
                 <input
                   type="number"
-                  placeholder="25"
+                  placeholder="1000"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
@@ -380,11 +380,11 @@ const MyLots = () => {
               <label className="space-y-1.5">
                 <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-neutral-500">
                   <IndianRupee className="h-3.5 w-3.5" />
-                  Price / Qtl
+                  Price / Kg
                 </span>
                 <input
                   type="number"
-                  placeholder="1800"
+                  placeholder="80"
                   value={pricePerUnit}
                   onChange={(e) => setPricePerUnit(e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
@@ -399,7 +399,7 @@ const MyLots = () => {
                 </span>
                 <textarea
                   rows={4}
-                  placeholder="Add crop quality, harvest date, packaging, or delivery notes"
+                  placeholder="Premium grade Kashmiri apples. Freshly harvested and available in bulk quantity"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full resize-none rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
