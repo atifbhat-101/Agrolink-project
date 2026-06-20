@@ -5,12 +5,21 @@ import generateOTP from '../utils/generateOTP.js';
 import sendEmail from '../utils/sendEmail.js';
 
 export const registerUser = async (req, res) => {
-  const { name, email, password, phone, role } = req.body;
+  const { name, password, phone, role } = req.body;
+  const email = req.body.email?.trim().toLowerCase();
+  let createdUserId = null;
+
   try {
+    if (!name || !email || !password || !phone || !role) {
+      return res.status(400).json({ message: 'Please provide all required signup fields' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-    const user = await User.create({ name, email, password, phone, role, isVerified: true });
+    const user = await User.create({ name, email, password, phone, role, isVerified: false });
+    createdUserId = user._id;
+
     const otpCode = generateOTP();
     await OTP.create({ email, otp: otpCode });
 
@@ -22,7 +31,12 @@ export const registerUser = async (req, res) => {
 
     res.status(201).json({ message: 'Registration successful. Verify your email with the OTP sent.' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (createdUserId) {
+      await User.deleteOne({ _id: createdUserId });
+      await OTP.deleteMany({ email });
+    }
+
+    res.status(500).json({ message: `Registration failed: ${error.message}` });
   }
 };
 
