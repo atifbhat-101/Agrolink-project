@@ -39,7 +39,8 @@ if (!fs.existsSync('uploads')) {
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-];
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
   cors({
@@ -53,6 +54,7 @@ app.use(
         return callback(null, true);
       }
 
+      console.error(`CORS blocked origin: ${origin}`);
       return callback(new Error('CORS blocked'));
     },
     credentials: true,
