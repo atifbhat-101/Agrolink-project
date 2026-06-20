@@ -46,12 +46,7 @@ const sendWithBrevoApi = async ({ email, subject, text, html }) => {
   }
 };
 
-const sendEmail = async ({ email, subject, text, html }) => {
-  if (process.env.BREVO_API_KEY) {
-    await sendWithBrevoApi({ email, subject, text, html });
-    return;
-  }
-
+const sendWithSmtp = async ({ email, subject, text, html }) => {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     throw new Error('SMTP configuration is missing');
   }
@@ -79,6 +74,23 @@ const sendEmail = async ({ email, subject, text, html }) => {
     text,
     html,
   });
+};
+
+const sendEmail = async ({ email, subject, text, html }) => {
+  if (process.env.BREVO_API_KEY) {
+    try {
+      await sendWithBrevoApi({ email, subject, text, html });
+      return;
+    } catch (error) {
+      if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        throw error;
+      }
+
+      console.warn(`Brevo API failed, falling back to SMTP: ${error.message}`);
+    }
+  }
+
+  await sendWithSmtp({ email, subject, text, html });
 };
 
 export default sendEmail;
