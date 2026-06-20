@@ -1,8 +1,57 @@
 import nodemailer from 'nodemailer';
 
-const SMTP_TIMEOUT_MS = 15000;
+const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS || 10000);
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+
+const parseSender = (value) => {
+  const fallbackEmail = process.env.SMTP_USER;
+  const fallbackName = 'AgroLink Platform';
+
+  if (!value) {
+    return { name: fallbackName, email: fallbackEmail };
+  }
+
+  const match = value.match(/^(.*)<(.+)>$/);
+  if (!match) {
+    return { name: fallbackName, email: value.replaceAll('"', '').trim() };
+  }
+
+  return {
+    name: match[1].replaceAll('"', '').trim() || fallbackName,
+    email: match[2].trim(),
+  };
+};
+
+const sendWithBrevoApi = async ({ email, subject, text, html }) => {
+  const sender = parseSender(process.env.SMTP_FROM);
+  const response = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender,
+      to: [{ email }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Brevo API failed (${response.status}): ${details}`);
+  }
+};
 
 const sendEmail = async ({ email, subject, text, html }) => {
+  if (process.env.BREVO_API_KEY) {
+    await sendWithBrevoApi({ email, subject, text, html });
+    return;
+  }
+
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     throw new Error('SMTP configuration is missing');
   }
@@ -20,6 +69,7 @@ const sendEmail = async ({ email, subject, text, html }) => {
     connectionTimeout: SMTP_TIMEOUT_MS,
     greetingTimeout: SMTP_TIMEOUT_MS,
     socketTimeout: SMTP_TIMEOUT_MS,
+    requireTLS: port === 587 || port === 2525,
   });
 
   await transporter.sendMail({
