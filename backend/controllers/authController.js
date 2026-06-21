@@ -4,6 +4,39 @@ import generateToken from '../utils/generateToken.js';
 import generateOTP from '../utils/generateOTP.js';
 import sendEmail from '../utils/sendEmail.js';
 
+const buildOtpResponse = (email, otpCode, emailError = null) => {
+  if (!emailError) {
+    return { message: 'Registration successful. Verify your email with the OTP sent.' };
+  }
+
+  console.error(`Registration email failed for ${email}: ${emailError.message}`);
+  console.info(`Verification OTP for ${email}: ${otpCode}`);
+
+  return {
+    message: 'Registration successful, but email delivery is temporarily unavailable. Use the verification code shown in server logs.',
+    emailDeliveryFailed: true,
+    otp: process.env.RETURN_OTP_ON_EMAIL_FAILURE === 'true' ? otpCode : undefined,
+  };
+};
+
+const createAndSendOtp = async (email) => {
+  const otpCode = generateOTP();
+  await OTP.deleteMany({ email });
+  await OTP.create({ email, otp: otpCode });
+
+  try {
+    await sendEmail({
+      email,
+      subject: 'Verify your AgroLink Account',
+      html: `<h1>Welcome to AgroLink</h1><p>Your verification OTP code is: <strong>${otpCode}</strong></p>`
+    });
+
+    return buildOtpResponse(email, otpCode);
+  } catch (emailError) {
+    return buildOtpResponse(email, otpCode, emailError);
+  }
+};
+
 export const registerUser = async (req, res) => {
   const { name, password, phone, role } = req.body;
   const email = req.body.email?.trim().toLowerCase();
@@ -15,21 +48,20 @@ export const registerUser = async (req, res) => {
     }
 
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: 'User already exists' });
+    if (userExists) {
+      if (userExists.isVerified) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
+
+      const otpResponse = await createAndSendOtp(email);
+      return res.status(200).json(otpResponse);
+    }
 
     const user = await User.create({ name, email, password, phone, role, isVerified: false });
     createdUserId = user._id;
 
-    const otpCode = generateOTP();
-    await OTP.create({ email, otp: otpCode });
-
-    await sendEmail({
-      email,
-      subject: 'Verify your AgroLink Account',
-      html: `<h1>Welcome to AgroLink</h1><p>Your verification OTP code is: <strong>${otpCode}</strong></p>`
-    });
-
-    res.status(201).json({ message: 'Registration successful. Verify your email with the OTP sent.' });
+    const otpResponse = await createAndSendOtp(email);
+    res.status(201).json(otpResponse);
   } catch (error) {
     console.error(`Registration failed for ${email || 'unknown email'}: ${error.message}`);
 

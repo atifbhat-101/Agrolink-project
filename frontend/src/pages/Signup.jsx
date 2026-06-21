@@ -32,6 +32,7 @@ const Signup = () => {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [fallbackOtp, setFallbackOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const Signup = () => {
 
     if (result.success) {
       setSuccessMsg(result.message);
+      setFallbackOtp(result.otp || '');
       setStep(2);
     } else {
       setError(result.message);
@@ -254,8 +256,15 @@ const Signup = () => {
               />
 
               <p className="text-center text-xs font-semibold text-neutral-500">
-                OTP sent to {formData.email}
+                {fallbackOtp ? 'Email delivery is unavailable. Use the temporary code below.' : `OTP sent to ${formData.email}`}
               </p>
+
+              {fallbackOtp && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center">
+                  <p className="text-[11px] font-black uppercase tracking-wider text-amber-700">Temporary Code</p>
+                  <p className="mt-1 text-2xl font-black tracking-[0.35em] text-amber-900">{fallbackOtp}</p>
+                </div>
+              )}
 
               <button
                 type="submit"

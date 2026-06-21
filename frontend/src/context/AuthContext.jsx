@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', userData);
-      return { success: true, message: data.message };
+      return { success: true, ...data };
     } catch (error) {
       return { 
         success: false, 
