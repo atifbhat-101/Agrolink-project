@@ -31,6 +31,8 @@ export const registerUser = async (req, res) => {
 
     res.status(201).json({ message: 'Registration successful. Verify your email with the OTP sent.' });
   } catch (error) {
+    console.error(`Registration failed for ${email || 'unknown email'}: ${error.message}`);
+
     if (createdUserId) {
       await User.deleteOne({ _id: createdUserId });
       await OTP.deleteMany({ email });

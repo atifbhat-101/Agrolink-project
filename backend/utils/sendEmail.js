@@ -4,6 +4,11 @@ const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS || 10000);
 const BREVO_API_TIMEOUT_MS = Number(process.env.BREVO_API_TIMEOUT_MS || 10000);
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
+const hasSmtpConfig = () =>
+  Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+const hasBrevoConfig = () => Boolean(process.env.BREVO_API_KEY);
+
 const parseSender = (value) => {
   const fallbackEmail = process.env.SMTP_USER;
   const fallbackName = 'AgroLink Platform';
@@ -93,32 +98,30 @@ const sendWithSmtp = async ({ email, subject, text, html }) => {
 };
 
 const sendEmail = async ({ email, subject, text, html }) => {
-  let brevoApiError = null;
+  const requestedProvider = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
+  const primaryProvider = requestedProvider || (hasSmtpConfig() ? 'smtp' : 'brevo');
+  const providers = primaryProvider === 'brevo' ? ['brevo', 'smtp'] : ['smtp', 'brevo'];
+  const errors = [];
 
-  if (process.env.BREVO_API_KEY) {
+  for (const provider of providers) {
+    if (provider === 'smtp' && !hasSmtpConfig()) continue;
+    if (provider === 'brevo' && !hasBrevoConfig()) continue;
+
     try {
-      await sendWithBrevoApi({ email, subject, text, html });
-      return;
-    } catch (error) {
-      brevoApiError = error;
-
-      if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        throw error;
+      if (provider === 'smtp') {
+        await sendWithSmtp({ email, subject, text, html });
+      } else {
+        await sendWithBrevoApi({ email, subject, text, html });
       }
 
-      console.warn(`Brevo API failed, falling back to SMTP: ${error.message}`);
+      return;
+    } catch (error) {
+      errors.push(`${provider.toUpperCase()}: ${error.message}`);
+      console.warn(`Email provider ${provider.toUpperCase()} failed: ${error.message}`);
     }
   }
 
-  try {
-    await sendWithSmtp({ email, subject, text, html });
-  } catch (smtpError) {
-    if (brevoApiError) {
-      throw new Error(`Brevo API failed: ${brevoApiError.message}; SMTP fallback failed: ${smtpError.message}`);
-    }
-
-    throw smtpError;
-  }
+  throw new Error(errors.length ? errors.join('; ') : 'No email provider is configured');
 };
 
 export default sendEmail;
