@@ -4,13 +4,15 @@ const SMTP_TIMEOUT_MS = Number(process.env.SMTP_TIMEOUT_MS || 10000);
 const BREVO_API_TIMEOUT_MS = Number(process.env.BREVO_API_TIMEOUT_MS || 10000);
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-const hasSmtpConfig = () =>
-  Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+const getEnv = (key) => process.env[key]?.trim();
 
-const hasBrevoConfig = () => Boolean(process.env.BREVO_API_KEY);
+const hasSmtpConfig = () =>
+  Boolean(getEnv('SMTP_HOST') && getEnv('SMTP_USER') && getEnv('SMTP_PASS'));
+
+const hasBrevoConfig = () => Boolean(getEnv('BREVO_API_KEY'));
 
 const parseSender = (value) => {
-  const fallbackEmail = process.env.SMTP_USER;
+  const fallbackEmail = getEnv('SMTP_USER');
   const fallbackName = 'AgroLink Platform';
 
   if (!value) {
@@ -29,7 +31,7 @@ const parseSender = (value) => {
 };
 
 const sendWithBrevoApi = async ({ email, subject, text, html }) => {
-  const sender = parseSender(process.env.SMTP_FROM);
+  const sender = parseSender(getEnv('SMTP_FROM'));
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), BREVO_API_TIMEOUT_MS);
 
@@ -68,28 +70,36 @@ const sendWithBrevoApi = async ({ email, subject, text, html }) => {
 };
 
 const sendWithSmtp = async ({ email, subject, text, html }) => {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  const smtpHost = getEnv('SMTP_HOST');
+  const smtpUser = getEnv('SMTP_USER');
+  const smtpPass = getEnv('SMTP_PASS');
+  const smtpPort = getEnv('SMTP_PORT') || '587';
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
     throw new Error('SMTP configuration is missing');
   }
 
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  const port = parseInt(smtpPort, 10);
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
+    host: smtpHost,
     port,
     secure: port === 465,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: smtpUser,
+      pass: smtpPass,
+    },
+    requireTLS: port === 587 || port === 2525,
+    tls: {
+      rejectUnauthorized: false,
     },
     connectionTimeout: SMTP_TIMEOUT_MS,
     greetingTimeout: SMTP_TIMEOUT_MS,
     socketTimeout: SMTP_TIMEOUT_MS,
-    requireTLS: port === 587 || port === 2525,
   });
 
   await transporter.sendMail({
-    from: process.env.SMTP_FROM || `"AgroLink Platform" <${process.env.SMTP_USER}>`,
+    from: getEnv('SMTP_FROM') || `"AgroLink Platform" <${smtpUser}>`,
     to: email,
     subject,
     text,
@@ -108,6 +118,8 @@ const sendEmail = async ({ email, subject, text, html }) => {
     if (provider === 'brevo' && !hasBrevoConfig()) continue;
 
     try {
+      console.info(`Sending email to ${email} via ${provider.toUpperCase()}`);
+
       if (provider === 'smtp') {
         await sendWithSmtp({ email, subject, text, html });
       } else {

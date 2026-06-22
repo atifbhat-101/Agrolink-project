@@ -34,9 +34,10 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/register', userData);
       return { success: true, ...data };
     } catch (error) {
+      console.error('Register request failed', error.response?.data || error.message || error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Registration operational failure.' 
+        message: error.response?.data?.message || error.message || 'Registration operational failure.' 
       };
     } finally {
       setLoading(false);
@@ -51,9 +52,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userInfo', JSON.stringify(data));
       return { success: true };
     } catch (error) {
+      console.error('Verify OTP request failed', error.response?.data || error.message || error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Invalid or expired activation OTP.' 
+        message: error.response?.data?.message || error.message || 'Invalid or expired activation OTP.' 
       };
     } finally {
       setLoading(false);

@@ -4,13 +4,21 @@ const DEFAULT_API_URL = import.meta.env.DEV
   ? "http://localhost:5000/api"
   : "https://agrolink-project.onrender.com/api";
 
+const apiBaseURL = import.meta.env.DEV
+  ? DEFAULT_API_URL
+  : import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || DEFAULT_API_URL,
+  baseURL: apiBaseURL,
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+if (import.meta.env.DEV && import.meta.env.VITE_API_URL) {
+  console.warn('VITE_API_URL is set in development but local API will be used:', apiBaseURL);
+}
 
 api.interceptors.request.use(
   (config) => {

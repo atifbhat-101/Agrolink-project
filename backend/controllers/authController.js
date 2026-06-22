@@ -4,21 +4,6 @@ import generateToken from '../utils/generateToken.js';
 import generateOTP from '../utils/generateOTP.js';
 import sendEmail from '../utils/sendEmail.js';
 
-const buildOtpResponse = (email, otpCode, emailError = null) => {
-  if (!emailError) {
-    return { message: 'Registration successful. Verify your email with the OTP sent.' };
-  }
-
-  console.error(`Registration email failed for ${email}: ${emailError.message}`);
-  console.info(`Verification OTP for ${email}: ${otpCode}`);
-
-  return {
-    message: 'Registration successful, but email delivery is temporarily unavailable. Use the verification code shown in server logs.',
-    emailDeliveryFailed: true,
-    otp: process.env.RETURN_OTP_ON_EMAIL_FAILURE === 'true' ? otpCode : undefined,
-  };
-};
-
 const createAndSendOtp = async (email) => {
   const otpCode = generateOTP();
   await OTP.deleteMany({ email });
@@ -28,12 +13,13 @@ const createAndSendOtp = async (email) => {
     await sendEmail({
       email,
       subject: 'Verify your AgroLink Account',
-      html: `<h1>Welcome to AgroLink</h1><p>Your verification OTP code is: <strong>${otpCode}</strong></p>`
+      html: `<h1>Welcome to AgroLink</h1><p>Your verification OTP code is: <strong>${otpCode}</strong></p>`,
     });
 
-    return buildOtpResponse(email, otpCode);
+    return { message: 'Registration successful. Verify your email with the OTP sent.' };
   } catch (emailError) {
-    return buildOtpResponse(email, otpCode, emailError);
+    console.error(`Email send failed for ${email}:`, emailError.message || emailError);
+    throw new Error(`Failed to send OTP email: ${emailError.message || 'unknown SMTP error'}`);
   }
 };
 
