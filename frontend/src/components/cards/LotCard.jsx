@@ -7,12 +7,12 @@ const LotCard = ({ lot, showActions = true, onEdit, onDelete, deleting = false }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-md flex flex-col h-full">
-      <div className="relative aspect-video w-full bg-neutral-100">
+      <div className="relative w-full bg-neutral-100 h-48 sm:h-56 md:h-48 overflow-hidden">
         {lot.images && lot.images.length > 0 ? (
           <img 
             src={lot.images[0]} 
             alt={lot.title} 
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-center"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-neutral-400 font-medium text-xs">

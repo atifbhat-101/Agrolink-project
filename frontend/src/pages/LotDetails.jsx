@@ -100,9 +100,9 @@ const LotDetails = () => {
 
         <div className="rounded-xl overflow-hidden border">
           {lot.images ? (
-            <img src={lot.images} alt="lot" className="w-full h-96 object-cover" />
+            <img src={Array.isArray(lot.images) ? lot.images[0] : lot.images} alt="lot" className="w-full h-48 sm:h-56 md:h-48 object-cover object-center" />
           ) : (
-            <div className="h-96 flex items-center justify-center text-gray-400">
+            <div className="h-48 sm:h-56 md:h-48 flex items-center justify-center text-gray-400">
               No Image
             </div>
           )}
