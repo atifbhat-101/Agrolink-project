@@ -14,6 +14,10 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ totalLots: 0, pendingOffers: 0, dealsClosed: 0 });
   const [recentLots, setRecentLots] = useState([]);
   const [recentOffers, setRecentOffers] = useState([]);
+  const [lotPage, setLotPage] = useState(1);
+  const [offerPage, setOfferPage] = useState(1);
+  const LOTS_PER_PAGE = 4;
+  const OFFERS_PER_PAGE = 4;
 
   useEffect(() => {
     const fetchDashboardContent = async () => {
@@ -26,8 +30,10 @@ const Dashboard = () => {
           const lotsData = lotsRes.data || [];
           const offersData = requestsRes.data || [];
 
-          setRecentLots(lotsData.slice(0, 3));
-          setRecentOffers(offersData.slice(0, 4));
+          setRecentLots(lotsData);
+          setRecentOffers(offersData);
+          setLotPage(1);
+          setOfferPage(1);
           setStats({
             totalLots: lotsData.length,
             pendingOffers: offersData.filter(o => o.status === 'pending').length,
@@ -40,8 +46,10 @@ const Dashboard = () => {
           const lotsData = lotsRes.data || [];
           const offersData = requestsRes.data || [];
 
-          setRecentLots(lotsData.slice(0, 3));
-          setRecentOffers(offersData.slice(0, 4));
+          setRecentLots(lotsData);
+          setRecentOffers(offersData);
+          setLotPage(1);
+          setOfferPage(1);
           setStats({
             totalLots: lotsData.length,
             pendingOffers: offersData.filter(o => o.status === 'pending').length,
@@ -74,6 +82,11 @@ const Dashboard = () => {
   };
 
   if (loading) return <div className="h-96 flex items-center justify-center"><Loader size="lg" /></div>;
+
+  const totalLotPages = Math.ceil(recentLots.length / LOTS_PER_PAGE) || 1;
+  const totalOfferPages = Math.ceil(recentOffers.length / OFFERS_PER_PAGE) || 1;
+  const paginatedLots = recentLots.slice((lotPage - 1) * LOTS_PER_PAGE, lotPage * LOTS_PER_PAGE);
+  const paginatedOffers = recentOffers.slice((offerPage - 1) * OFFERS_PER_PAGE, offerPage * OFFERS_PER_PAGE);
 
   return (
     <div className="space-y-8">
@@ -113,9 +126,32 @@ const Dashboard = () => {
           {recentLots.length === 0 ? (
             <EmptyState title="No harvest records found" description="List your crop lots to begin tracking market interactions." />
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {recentLots.map(lot => <LotCard key={lot._id} lot={lot} />)}
-            </div>
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {paginatedLots.map(lot => <LotCard key={lot._id} lot={lot} />)}
+              </div>
+              {totalLotPages > 1 && (
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white p-3 text-sm">
+                  <button
+                    type="button"
+                    className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => setLotPage(prev => Math.max(1, prev - 1))}
+                    disabled={lotPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <span className="font-semibold text-neutral-600">Page {lotPage} of {totalLotPages}</span>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => setLotPage(prev => Math.min(totalLotPages, prev + 1))}
+                    disabled={lotPage === totalLotPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -126,16 +162,39 @@ const Dashboard = () => {
           {recentOffers.length === 0 ? (
             <EmptyState title="No offers monitored" description="Bargaining dialogs and contract sheets will appear here." />
           ) : (
-            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-              {recentOffers.map(offer => (
-                <RequestCard 
-                  key={offer._id} 
-                  request={offer} 
-                  role={user.role} 
-                  onStatusUpdate={handleOfferStatusUpdate} 
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+                {paginatedOffers.map(offer => (
+                  <RequestCard 
+                    key={offer._id} 
+                    request={offer} 
+                    role={user.role} 
+                    onStatusUpdate={handleOfferStatusUpdate} 
+                  />
+                ))}
+              </div>
+              {totalOfferPages > 1 && (
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white p-3 text-sm">
+                  <button
+                    type="button"
+                    className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => setOfferPage(prev => Math.max(1, prev - 1))}
+                    disabled={offerPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <span className="font-semibold text-neutral-600">Page {offerPage} of {totalOfferPages}</span>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => setOfferPage(prev => Math.min(totalOfferPages, prev + 1))}
+                    disabled={offerPage === totalOfferPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
