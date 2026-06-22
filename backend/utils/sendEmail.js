@@ -109,9 +109,19 @@ const sendWithSmtp = async ({ email, subject, text, html }) => {
 
 const sendEmail = async ({ email, subject, text, html }) => {
   const requestedProvider = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
-  const primaryProvider = requestedProvider || (hasSmtpConfig() ? 'smtp' : 'brevo');
-  const providers = primaryProvider === 'brevo' ? ['brevo', 'smtp'] : ['smtp', 'brevo'];
+  const activeProvider = requestedProvider || (hasSmtpConfig() ? 'smtp' : 'brevo');
+  const providers = activeProvider === 'brevo' ? ['brevo', 'smtp'] : ['smtp', 'brevo'];
   const errors = [];
+
+  console.info('Email send configuration:', {
+    activeProvider,
+    requestedProvider,
+    smtpConfigured: hasSmtpConfig(),
+    brevoConfigured: hasBrevoConfig(),
+    smtpHost: getEnv('SMTP_HOST'),
+    smtpUser: getEnv('SMTP_USER') ? 'configured' : 'missing',
+    brevoApiKey: getEnv('BREVO_API_KEY') ? 'configured' : 'missing',
+  });
 
   for (const provider of providers) {
     if (provider === 'smtp' && !hasSmtpConfig()) continue;
