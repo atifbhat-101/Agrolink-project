@@ -110,7 +110,11 @@ const sendWithSmtp = async ({ email, subject, text, html }) => {
 const sendEmail = async ({ email, subject, text, html }) => {
   const requestedProvider = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
   const activeProvider = requestedProvider || (hasSmtpConfig() ? 'smtp' : 'brevo');
-  const providers = activeProvider === 'brevo' ? ['brevo', 'smtp'] : ['smtp', 'brevo'];
+  const providers = requestedProvider
+    ? [activeProvider]
+    : activeProvider === 'brevo'
+    ? ['brevo', 'smtp']
+    : ['smtp', 'brevo'];
   const errors = [];
 
   console.info('Email send configuration:', {
