@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Sprout, Handshake, Clock3, Trash2 } from 'lucide-react';
+import { Users, ShieldCheck, UserRoundCheck, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import Loader from '../components/common/Loader';
 import StatCard from '../components/cards/StatCard';
@@ -43,23 +43,22 @@ const AdminDashboard = () => {
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-black text-neutral-800">Administrator Dashboard</h2>
-        <p className="mt-1 text-sm text-neutral-500">Monitor AgroLink users, listings, and marketplace activity.</p>
+        <p className="mt-1 text-sm text-neutral-500">Manage platform user accounts and access.</p>
       </div>
 
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p>}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard title="Registered Users" value={overview.users} icon={Users} color="emerald" />
-        <StatCard title="Crop Listings" value={overview.lots} icon={Sprout} color="blue" />
-        <StatCard title="Pending Offers" value={overview.pendingRequests} icon={Clock3} color="amber" />
-        <StatCard title="Completed Deals" value={overview.completedDeals} icon={Handshake} color="emerald" />
+        <StatCard title="Farmers" value={overview.farmers} icon={UserRoundCheck} color="blue" />
+        <StatCard title="Buyers" value={overview.buyers} icon={ShieldCheck} color="amber" />
       </div>
 
       <section className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 px-5 py-4">
           <div>
             <h3 className="font-black text-neutral-800">User Management</h3>
-            <p className="text-xs text-neutral-500">{overview.farmers} farmers · {overview.buyers} buyers · {overview.availableLots} active listings</p>
+            <p className="text-xs text-neutral-500">Review and manage registered platform accounts.</p>
           </div>
         </div>
         <div className="overflow-x-auto">
