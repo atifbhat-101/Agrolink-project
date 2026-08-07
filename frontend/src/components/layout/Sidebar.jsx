@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
-import { X, LayoutDashboard, ShoppingBag, PlusCircle, MessageSquare, ClipboardList, UserCircle } from 'lucide-react';
+import { X, LayoutDashboard, ShoppingBag, PlusCircle, MessageSquare, ClipboardList, UserCircle, ShieldCheck } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -8,12 +8,13 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const navigationItems = [
     { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, roles: ['farmer', 'buyer'] },
+    { name: 'Admin Dashboard', to: '/admin', icon: ShieldCheck, roles: ['admin'] },
     { name: 'Browse Crops', to: '/browse', icon: ShoppingBag, roles: ['buyer'] },
     { name: 'My Harvest Lots', to: '/my-lots', icon: ClipboardList, roles: ['farmer'] },
     { name: 'Sent Offers', to: '/my-requests', icon: PlusCircle, roles: ['buyer'] },
     { name: 'Incoming Offers', to: '/buyer-requests', icon: ClipboardList, roles: ['farmer'] },
-    { name: 'Messages', to: '/messages', icon: MessageSquare, roles: ['farmer', 'buyer'] },
-    { name: 'Profile Account', to: '/profile', icon: UserCircle, roles: ['farmer', 'buyer'] },
+    { name: 'Messages', to: '/messages', icon: MessageSquare, roles: ['farmer', 'buyer', 'admin'] },
+    { name: 'Profile Account', to: '/profile', icon: UserCircle, roles: ['farmer', 'buyer', 'admin'] },
   ];
 
   const allowedLinks = navigationItems.filter(item => item.roles.includes(user?.role));

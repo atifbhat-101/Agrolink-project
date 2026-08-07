@@ -18,6 +18,7 @@ import LotDetails from './pages/LotDetails';
 import MyLots from './pages/MyLots';
 import MyRequests from './pages/MyRequests';
 import BuyerRequests from './pages/BuyerRequests';
+import AdminDashboard from './pages/AdminDashboard';
 
 const App = () => {
   return (
@@ -34,7 +35,7 @@ const App = () => {
             {/* Shared Protected Routes */}
             <Route
               element={
-                <PrivateRoute allowedRoles={['farmer', 'buyer']} />
+                <PrivateRoute allowedRoles={['farmer', 'buyer', 'admin']} />
               }
             >
               <Route element={<Layout />}>
@@ -42,6 +43,12 @@ const App = () => {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/lots/:id" element={<LotDetails />} />
+              </Route>
+            </Route>
+
+            <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+              <Route element={<Layout />}>
+                <Route path="/admin" element={<AdminDashboard />} />
               </Route>
             </Route>
 

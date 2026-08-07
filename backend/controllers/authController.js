@@ -33,6 +33,10 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'Please provide all required signup fields' });
     }
 
+    if (!['farmer', 'buyer'].includes(role)) {
+      return res.status(403).json({ message: 'Only farmer and buyer accounts can be created here.' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       if (userExists.isVerified) {
